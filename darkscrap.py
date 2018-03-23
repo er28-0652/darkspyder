@@ -28,16 +28,15 @@ class TorBrowser(webdriver.Firefox):
         
         super().__init__(firefox_profile=self.profile)
 
-    def __enter__(self):
-        return self.driver()
+    def __enter__(self. url):
+        return self.driver().get(url)
 
     def __exit__(self, exc_type, value, traceback):
         self.quit()
 
 
 class WallStMarket(TorBrowser):
-    def __init__(self, url):
-        self.url = url
+    def __init__(self):
         super().__init__()
     
     def save_captcha_image(self):
