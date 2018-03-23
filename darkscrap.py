@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from PIL import Image
 from selenium import webdriver
 
-from bot import send_
 
 class TorBrowser(webdriver.Firefox):
     def __init__(self, proxy='127.0.0.1', port=9050):
