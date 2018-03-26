@@ -6,5 +6,5 @@ def main():
     bot.run()
 
 if __name__ == "__main__":
-    print('start slackbot')
+    print('オ"アア"アア"ア"ア"ーーーーッ！！！')
     main()
