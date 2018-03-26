@@ -1,2 +1,5 @@
 slackbot_settings.py
+setting.py
+*.log
 *.pyc
+*.ipynb
