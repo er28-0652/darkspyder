@@ -1,6 +1,7 @@
 import base64
 import re
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
@@ -46,6 +47,7 @@ class WallStMarket(DarkSpyder):
         self.cap_data_ptn = re.compile(r'<img class="captcha_image" id="[^"]+" src="data:image/jpeg;base64,([^"]+)"')
         self.cap_token_ptn = re.compile(r'<input type="hidden" id="form__token" name="form\[_token\]" value="([^"]+)" />')
         self.is_pass_security = False
+        self.token = ''
 
     def start(self):
         self.current_page = self.client.get(self.url+'/index').text
@@ -85,19 +87,56 @@ class WallStMarket(DarkSpyder):
         }
         html = self.client.post(self.url+'/login', data=payload).text
         self.current_page = html
-        return self.is_login
+        if self.is_login:
+            self.token = cap_token
+            return True
+        return False
+
+    def _read_page(self, category, page):
+        payload = {
+            'form[_token]': self.token,
+            'form[catT]': category,
+            'form[catM]':'0',
+            'form[catB]':'0',
+            'form[searchTerm]':'',
+            'menuCatT': category,
+            'form[limit]':'90',
+            'form[rating]':'0',
+            'form[vendorLevel]':'1',
+            'form[vendoractivity]':'0',
+            'form[quantity]':'0',
+            'form[maxpricepunit]':'0',
+            'form[shipsfrom]':'0',
+            'form[shipsto]':'0',
+            'form[sort]':'pop_week_desc',
+            'form[page': page
+        }
+        return self.client.post(self.url+'/index', data=payload).text
+
 
     def parse(self):
         soup = BeautifulSoup(self.current_page, 'lxml')
         categories = soup.find_all('button', {'name':'menuCatT'})
 
-        results = {}
         for cat in categories:
+            category_id = cat.get('value')
             texts = cat.get_text().split()
-            number = texts[-1]
-            category = ''.join(texts[:-1])
-            results[category] = int(number)
-        return results
+            category = ' '.join(texts[:-1])
+            # currently Malware & Software is only supported
+            if category == 'Malware & Software':
+                number = texts[-1]
+                result = pd.DataFrame()
+                for page in range(1, int(int(number)/90)+2):
+                    page_html = self._read_page(client, category_id, str(page))
+                    #page_soup = BeautifulSoup(page_html, 'lxml')
+                    #table = page_soup.find(class_='table table-bordered table-striped table-xxsm table-logs')
+                    df = pd.read_html(page_html)[1]
+                    df['Level'] = df['Vendor'].apply(lambda vendor: vendor.split()[-1])
+                    df['Vendor'] = df['Vendor'].apply(lambda vendor: vendor.split()[0])
+                    df['Price'] = df['Price'].apply(lambda price: price.split()[-1].split('/')[0])
+                    df = df.drop('#', axis=1)
+                    result = result.append(df, ignore_index=True)
+        return result
 
     @property
     def is_login(self):
