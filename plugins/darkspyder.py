@@ -113,6 +113,14 @@ class WallStMarket(DarkSpyder):
         }
         return self.client.post(self.url+'/index', data=payload).text
 
+    @staticmethod
+    def _read_table(table):
+        df = pd.read_html(page_html)[1]
+        df['Level'] = df['Vendor'].apply(lambda vendor: vendor.split()[-1])
+        df['Vendor'] = df['Vendor'].apply(lambda vendor: vendor.split()[0])
+        df['Price'] = df['Price'].apply(lambda price: price.split()[-1].split('/')[0])
+        df = df.drop('#', axis=1)
+        return df
 
     def parse(self):
         soup = BeautifulSoup(self.current_page, 'lxml')
@@ -126,16 +134,13 @@ class WallStMarket(DarkSpyder):
             if category == 'Malware & Software':
                 number = texts[-1]
                 result = pd.DataFrame()
+                # read each page
                 for page in range(1, int(int(number)/90)+2):
                     page_html = self._read_page(client, category_id, str(page))
                     #page_soup = BeautifulSoup(page_html, 'lxml')
                     #table = page_soup.find(class_='table table-bordered table-striped table-xxsm table-logs')
-                    df = pd.read_html(page_html)[1]
-                    df['Level'] = df['Vendor'].apply(lambda vendor: vendor.split()[-1])
-                    df['Vendor'] = df['Vendor'].apply(lambda vendor: vendor.split()[0])
-                    df['Price'] = df['Price'].apply(lambda price: price.split()[-1].split('/')[0])
-                    df = df.drop('#', axis=1)
-                    result = result.append(df, ignore_index=True)
+                    pruduct_table = self._read_table(page_html)
+                    result = result.append(pruduct_table, ignore_index=True)
         return result
 
     @property
