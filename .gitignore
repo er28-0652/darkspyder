@@ -3,3 +3,4 @@ setting.py
 *.log
 *.pyc
 *.ipynb
+*.json
