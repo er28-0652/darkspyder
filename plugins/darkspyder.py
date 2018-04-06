@@ -130,10 +130,10 @@ class WallStMarket(DarkSpyder):
             category_id = cat.get('value')
             texts = cat.get_text().split()
             category = ' '.join(texts[:-1])
-            # currently Malware & Software is only supported
-            if category == 'Malware & Software':
+            result = pd.DataFrame()
+            # currently Software & Malware is only supported
+            if category == 'Software & Malware':
                 number = texts[-1]
-                result = pd.DataFrame()
                 # read each page
                 for page in range(1, int(int(number)/90)+2):
                     page_html = self._read_page(client, category_id, str(page))
@@ -141,7 +141,7 @@ class WallStMarket(DarkSpyder):
                     #table = page_soup.find(class_='table table-bordered table-striped table-xxsm table-logs')
                     pruduct_table = self._read_table(page_html)
                     result = result.append(pruduct_table, ignore_index=True)
-        return result
+            return result
 
     @property
     def is_login(self):
