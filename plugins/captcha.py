@@ -2,7 +2,7 @@ import io
 import pickle
 from datetime import datetime
 from slackbot.bot import respond_to
-from .db import PandasSpreadSheet
+from .db import gen_spreadsheet_client
 from .setting import (TARGET_MARKETS, PAGE_ID)
 
 clients = {}
