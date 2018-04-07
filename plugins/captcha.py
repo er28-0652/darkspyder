@@ -1,5 +1,6 @@
 import io
 import pickle
+import os
 from datetime import datetime
 from slackbot.bot import respond_to
 from .db import gen_spreadsheet_client
@@ -42,10 +43,12 @@ def break_captcha(message, cap_token, answer):
     client = clients[cap_token]
     ok = client.login(cap_token, answer)
     if ok and client.is_login:
-        totals = client.parse()
+        result = client.parse()
 
         # read current data on spreadsheet
-        spreadsheet = gen_spreadsheet_client('credential.json')
+        current_dir= os.getcwd()
+        credential_path = os.path.join(current_dir, 'plugins/credential.json')
+        spreadsheet = gen_spreadsheet_client(credential_path)
         sp = spreadsheet(PAGE_ID)
         sp.open('Software & Malware')
         data = sp.read()
