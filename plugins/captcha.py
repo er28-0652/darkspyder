@@ -2,7 +2,8 @@ import io
 import pickle
 from datetime import datetime
 from slackbot.bot import respond_to
-from .setting import target_markets
+from .db import PandasSpreadSheet
+from .setting import (TARGET_MARKETS, PAGE_ID)
 
 clients = {}
 
@@ -23,7 +24,7 @@ def send_captcha_rawdata(message, image_data, image_id):
 def start_scraping(message):
     message.send('ダーーーク！スクレイッピングッッッ！！！')
 
-    for target in target_markets:
+    for target in TARGET_MARKETS:
         market = target['class']
         url = target['url']
         message.send('アクセス中 -> {0}'.format(url))
@@ -42,7 +43,23 @@ def break_captcha(message, cap_token, answer):
     ok = client.login(cap_token, answer)
     if ok and client.is_login:
         totals = client.parse()
-        message.send(''.join(['{0}: {1}\n'.format(category, number) for category, number in totals.items()]))
+
+        # read current data on spreadsheet
+        spreadsheet = gen_spreadsheet_client('credential.json')
+        sp = spreadsheet(PAGE_ID)
+        sp.open('Software & Malware')
+        data = sp.read()
+
+        # get diff of new data and old data
+        diff = result[~result['Name'].isin(data['Name'])]
+        diff['Date'] = datetime.today().strftime('%Y-%m-%d')
+        diff = diff.loc[:, ['Date', 'Name', 'Vendor', 'Price', 'Rating', 'Level']]
+
+        message.send('新着 {0}件'.format(len(diff)))
+
+        # update spreadsheet
+        sp.append(diff)
+
         message.send('いっぱいちゅき❤️')
     else:
         cap_token, image_data = client.get_captcha()
