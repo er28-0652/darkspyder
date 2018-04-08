@@ -44,7 +44,8 @@ def break_captcha(message, cap_token, answer):
     ok = client.login(cap_token, answer)
     if ok and client.is_login:
         result = client.parse()
-
+        result = result.drop_duplicates(['Name'])
+        
         # read current data on spreadsheet
         current_dir= os.getcwd()
         credential_path = os.path.join(current_dir, 'plugins/credential.json')
